@@ -92,7 +92,13 @@ class DnsdbClient(object):
         if params:
             url += '?{0}'.format(urllib.parse.urlencode(params))
 
-        http = urllib3.PoolManager()
+        if self.https_proxy:
+            manager = urllib3.ProxyManager(self.https_proxy)
+        elif self.http_proxy:
+            manager = urllib3.ProxyManager(self.http_proxy)
+        else:
+            manager = urllib3.PoolManager()
+
         headers = {
             'Accept': 'application/json',
             'X-Api-Key': self.apikey
@@ -102,7 +108,7 @@ class DnsdbClient(object):
             sys.stderr.write(";; query URL =" + url)
 
         try:
-            r = http.request('GET', url, headers=headers)
+            r = manager.request(method='GET', url=url, headers=headers)
 
             json_data = r.data.decode('utf-8')
             if json_data:
